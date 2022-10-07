@@ -77,8 +77,11 @@ async def poll_answers_add_another(message: types.Message, state: FSMContext):
 async def poll_answers_end(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await state.finish()
-    await message.answer_poll(question=data["question"], options=data["answers"], is_anonymous=data["is_anonymous"],
-                              allows_multiple_answers=data["allows_multiple_answers"])
+    poll = await message.answer_poll(question=data["question"], options=data["answers"], is_anonymous=data["is_anonymous"],
+                              allows_multiple_answers=data["allows_multiple_answers"], reply_markup=remove_kb)
+    print(poll.poll)
+    await asyncio.sleep(60)
+    print(poll.poll)
 
 
 @dp.message_handler(state=CreatePollState.answers)
@@ -98,3 +101,33 @@ async def poll_answers(message: types.Message, state: FSMContext):
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
 
 
+
+
+# async def just_poll_answer(active_quiz: types.Poll):
+#     """
+#     Реагирует на закрытие опроса/викторины. Если убрать проверку на poll.is_closed == True,
+#     то этот хэндлер будет срабатывать при каждом взаимодействии с опросом/викториной, наравне
+#     с poll_answer_handler
+#     Чтобы не было путаницы:
+#     * active_quiz - викторина, в которой кто-то выбрал ответ
+#     * saved_quiz - викторина, находящаяся в нашем "хранилище" в памяти
+#     Этот хэндлер частично повторяет тот, что выше, в части, касающейся поиска нужного опроса в нашем "хранилище".
+#     :param active_quiz: объект Poll
+#     """
+#     quiz_owner = quizzes_owners.get(active_quiz.id)
+#     if not quiz_owner:
+#         logging.error(f"Не могу найти автора викторины с active_quiz.id = {active_quiz.id}")
+#         return
+#     for num, saved_quiz in enumerate(quizzes_database[quiz_owner]):
+#         if saved_quiz.quiz_id == active_quiz.id:
+#             # Используем ID победителей, чтобы получить по ним имена игроков и поздравить.
+#             congrats_text = []
+#             for winner in saved_quiz.winners:
+#                 chat_member_info = await bot.get_chat_member(saved_quiz.chat_id, winner)
+#                 congrats_text.append(chat_member_info.user.get_mention(as_html=True))
+#
+#             await bot.send_message(saved_quiz.chat_id, "Викторина закончена, всем спасибо! Вот наши победители:\n\n"
+#                                    + "\n".join(congrats_text), parse_mode="HTML")
+#             # Удаляем викторину из обоих наших "хранилищ"
+#             del quizzes_owners[active_quiz.id]
+#             del quizzes_database[quiz_owner][num]
