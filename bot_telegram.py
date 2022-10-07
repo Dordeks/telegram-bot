@@ -8,7 +8,7 @@ from aiogram.dispatcher import FSMContext
 from texts import *
 from states import *
 from config import KEYWORD
-from keyboard import main_kb, remove_kb
+from keyboard import main_kb, remove_kb, yes_no_kb, create_new_or_not
 
 
 
@@ -35,6 +35,18 @@ async def create_poll(message: types.Message):
     await message.answer(createpoll_is_anonymous, reply_markup=yes_no_kb)
     await CreatePollState.is_anonymous.set()
 
+@dp.message_handler(state=CreatePollState.is_anonymous)
+async def poll_is_anonymous(message: types.Message, state: FSMContext):
+    if message.text == "Да":
+        await state.update_data(is_anonymous=True)
+        await message.answer(createpoll_allows_multiple_answers, reply_markup=yes_no_kb)
+        await state.set_state(CreatePollState.allows_multiple_answers)
+    elif message.text == "Нет":
+        await state.update_data(is_anonymous=False)
+        await message.answer(createpoll_allows_multiple_answers, reply_markup=yes_no_kb)
+        await state.set_state(CreatePollState.allows_multiple_answers)
+    else:
+        await message.answer("Выберите вариант из предложенных")
 
 @dp.message_handler(state=CreatePollState.allows_multiple_answers)
 async def poll_allows_multiple_answers(message: types.Message, state: FSMContext):
