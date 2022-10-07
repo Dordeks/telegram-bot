@@ -9,7 +9,7 @@ from texts import *
 from states import *
 from config import KEYWORD
 from keyboard import main_kb, remove_kb, yes_no_kb, create_new_or_not
-
+import asyncio
 
 
 
@@ -74,7 +74,7 @@ async def poll_answers_add_another(message: types.Message, state: FSMContext):
     await message.answer(createpoll_answers_2, reply_markup=remove_kb)
 
 @dp.message_handler(Text(equals='Закончить с ответами', ignore_case=True), state=CreatePollState.answers)
-async def poll_answers_end(message: types.Message, state: FSMContext):
+async def poll_send(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await state.finish()
     poll = await message.answer_poll(question=data["question"], options=data["answers"], is_anonymous=data["is_anonymous"],
@@ -92,10 +92,12 @@ async def poll_answers(message: types.Message, state: FSMContext):
     if len(answers) < 2:
         await message.answer(createpoll_answers_1)
     else:
-        await message.answer(reply_markup=create_new_or_not)
-    state.update_data(answers=answers)
+        await message.answer("Добавьте еще один вариант или закончите.", reply_markup=create_new_or_not)
+    await state.update_data(answers=answers)
 
-
+@dp.poll_handler()
+async def answer(poll: types.Poll):
+    print(poll)
 
 
 executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
